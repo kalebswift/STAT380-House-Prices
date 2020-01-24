@@ -1,15 +1,19 @@
 library(data.table)
-install.packages("Metrics")
 library(Metrics)
 
-DT <- fread("./project/volume/models/data/raw/Stat_380_train.cscv")
+DT <- fread("./project/volume/models/data/raw/Stat_380_train.csv")
+
 
 #subset only rows with values for SalePrice. (pull from GitHub)
-sub_DT <- DT[!is.na(DT$SalePrice)][,.(Origin, DepDelay)]
+train <- DT[!is.na(DT$SalePrice)]
 
-rand_idx <- sample(1:nrow(sub_DT), 1000000)
+avg_price <- mean(train$SalePrice)
 
-train <- sub_DT[!rand_idx]
+test$null_guess <- avg_price
 
-avg_delay <- mean(train$DepDelay)
+test
 
+# finish the below line of code
+#delay_tab <- train[,.(avg_price = mean(SalePrice)), by
+
+new_test_tab <- merge(test, price_tab, all.x=T)
