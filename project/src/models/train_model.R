@@ -20,6 +20,10 @@ test$Null_model<-avg_price
 # get root mean squared error
 rmse(train$SalePrice,test$Null_model)
 
+# create submission dataframe
+submit <- test[,.(Id, Null_model)]
+names(submit)[names(submit) == "Null_model"] = "SalePrice"
+
 
 #group by BldgType first to make a little more interesting model
 
@@ -36,4 +40,4 @@ rmse(train$SalePrice,test$Null_model)
 
 
 # make a submit file
-fwrite(test[,.(Id, Null_model)],"./project/volume/models/data/processed/submit.csv")
+fwrite(submit,"./project/volume/models/data/processed/submit.csv")
