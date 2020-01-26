@@ -5,7 +5,7 @@ library(Metrics)
 
 # Create the test dataframe
 
-DT<-fread('./project/volume/models/data/raw/Stat_380_.csv')
+DT<-fread('./project/volume/models/data/raw/Stat_380_train.csv')
 train<-DT[!is.na(DT$SalePrice)]
 DT2<-fread('./project/volume/models/data/raw/Stat_380_test.csv')
 test<-DT2[!is.na(DT2$SalePrice)]
