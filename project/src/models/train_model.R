@@ -4,41 +4,40 @@ library(Metrics)
 
 
 download.file(url="https://www.kaggle.com/c/psu-stat-380-house-prices/data/Stat_380_test.csv",destfile='./project/volume/models/data/raw/Stat_380_test.csv', method='curl')
-download.file(url="https://www.kaggle.com/c/psu-stat-380-house-prices/data/Stat_380_train",destfile='./project/volume/models/data/rawStat_380_test.csv', method='curl')
+download.file(url="https://www.kaggle.com/c/psu-stat-380-house-prices/data/Stat_380_train",destfile='./project/volume/models/data/raw/Stat_380_train.csv', method='curl')
 
 
 # Create the test dataframe
 
 DT<-fread('./project/volume/models/data/raw/Stat_380_train.csv')
-test<-DT[!is.na(DT$SalePrice)]
+train<-DT[!is.na(DT$SalePrice)]
+DT2<-fread('./project/volume/models/data/raw/Stat_380_test.csv')
+test<-DT2[!is.na(DT2$SalePrice)]
 
 # make a null model
 
-avg_delay<-mean(train$DepDelay)
+avg_price<-mean(train$SalePrice)
 
-test$Null_model<-avg_delay
-
-
-# using the metrics package here because my dataset isnt on kaggle, but this part would be done for you by submitting to the LB
-rmse(test$DepDelay,test$Null_model)
+test$Null_model<-avg_price
 
 
-#group by airport first to make a little more interesting model
-
-origin_delay<-train[,.(ap_avg_delay=mean(DepDelay)),by=Origin]
-
-setkey(origin_delay,Origin)
-setkey(test,Origin)
-
-test<-merge(test,origin_delay, all.x=T)
+# get root mean squared error
+rmse(test$SalePrice,test$Null_model)
 
 
-# using the metrics package here because my dataset isnt on kaggle, but this part would be done for you by submitting to the LB
-rmse(test$DepDelay,test$ap_avg_delay)
+#group by BldgType first to make a little more interesting model
+
+type_price<-train[,.(ap_avg_price=mean(SalePrice)),by=BldgType]
+
+setkey(type_price,BldgType)
+setkey(test,BldgType)
+
+test<-merge(test,type_price, all.x=T)
 
 
+# get rmse
+rmse(test$DepDelay,test$ap_avg_price)
 
 
-
-# in my example I do not need to make a submit file, but if I did I would do something like this
-fwrite(test[,.(ap_avg_delay)],"./project/volume/data/processed/submit.csv")
+# make a submit file
+fwrite(test[,.(ap_avg_price)],"./project/volume/models/data/processed/submit.csv")
