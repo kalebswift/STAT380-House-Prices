@@ -3,13 +3,9 @@ library(data.table)
 library(Metrics)
 
 
-download.file(url="https://www.kaggle.com/c/psu-stat-380-house-prices/data/Stat_380_test.csv",destfile='./project/volume/models/data/raw/Stat_380_test.csv', method='curl')
-download.file(url="https://www.kaggle.com/c/psu-stat-380-house-prices/data/Stat_380_train",destfile='./project/volume/models/data/raw/Stat_380_train.csv', method='curl')
-
-
 # Create the test dataframe
 
-DT<-fread('./project/volume/models/data/raw/Stat_380_train.csv')
+DT<-fread('./project/volume/models/data/raw/Stat_380_.csv')
 train<-DT[!is.na(DT$SalePrice)]
 DT2<-fread('./project/volume/models/data/raw/Stat_380_test.csv')
 test<-DT2[!is.na(DT2$SalePrice)]
