@@ -1,19 +1,44 @@
+
 library(data.table)
 library(Metrics)
 
-DT <- fread("./project/volume/models/data/raw/Stat_380_train.csv")
+
+download.file(url="https://www.kaggle.com/c/psu-stat-380-house-prices/data/Stat_380_test.csv",destfile='./project/volume/models/data/raw/Stat_380_test.csv', method='curl')
+download.file(url="https://www.kaggle.com/c/psu-stat-380-house-prices/data/Stat_380_train",destfile='./project/volume/models/data/rawStat_380_test.csv', method='curl')
 
 
-#subset only rows with values for SalePrice. (pull from GitHub)
-train <- DT[!is.na(DT$SalePrice)]
+# Create the test dataframe
 
-avg_price <- mean(train$SalePrice)
+DT<-fread('./project/volume/models/data/raw/Stat_380_train.csv')
+test<-DT[!is.na(DT$SalePrice)]
 
-test$null_guess <- avg_price
+# make a null model
 
-test
+avg_delay<-mean(train$DepDelay)
 
-# finish the below line of code
-#delay_tab <- train[,.(avg_price = mean(SalePrice)), by
+test$Null_model<-avg_delay
 
-new_test_tab <- merge(test, price_tab, all.x=T)
+
+# using the metrics package here because my dataset isnt on kaggle, but this part would be done for you by submitting to the LB
+rmse(test$DepDelay,test$Null_model)
+
+
+#group by airport first to make a little more interesting model
+
+origin_delay<-train[,.(ap_avg_delay=mean(DepDelay)),by=Origin]
+
+setkey(origin_delay,Origin)
+setkey(test,Origin)
+
+test<-merge(test,origin_delay, all.x=T)
+
+
+# using the metrics package here because my dataset isnt on kaggle, but this part would be done for you by submitting to the LB
+rmse(test$DepDelay,test$ap_avg_delay)
+
+
+
+
+
+# in my example I do not need to make a submit file, but if I did I would do something like this
+fwrite(test[,.(ap_avg_delay)],"./project/volume/data/processed/submit.csv")
