@@ -1,6 +1,8 @@
 
 library(data.table)
 library(Metrics)
+library(caret)
+
 
 
 # Create the test dataframe
@@ -9,6 +11,15 @@ DT<-fread('./project/volume/models/data/raw/Stat_380_train.csv')
 train<-DT[!is.na(DT$SalePrice)]
 DT2<-fread('./project/volume/models/data/raw/Stat_380_test.csv')
 test<-DT2
+
+
+# Wrangle train to be more similar to test
+
+train.m1 <- melt(train, id.vars=c("Id"), measure.vars=c("BldgType1Fam", "BldgType2fmCon", "BldgTypeDuplex", "BldgTypeTwnhs", "BldgTypeTwnhsE"))
+train.m1 <- subset(train.m1, value=="1")
+setorder(train.m1, Id, na.last=FALSE)
+
+
 
 # make a null model
 
@@ -25,19 +36,36 @@ submit <- test[,.(Id, Null_model)]
 names(submit)[names(submit) == "Null_model"] = "SalePrice"
 
 
-#group by BldgType first to make a little more interesting model
+# Begin working on lm model
 
-#type_price<-train[,.(ap_avg_price=mean(SalePrice)),by=BldgType]
+set.seed(77)
 
-#setkey(type_price,BldgType)
-#setkey(test,BldgType)
-
-#test<-merge(test,type_price, all.x=T)
+train_y <- train$SalePrice
 
 
-# get rmse
-#rmse(train$SalePrice,test$ap_avg_price)
+dummies <- dummyVars(SalePrice ~ ., data=train)
+train <- predict(dummies, newdata = train)
+
+# reformat and add back response
+
+train <- data.table(train)
+train$SalePrice <- train_y
+test <- data.table(test)
 
 
-# make a submit file
+# fit a linear model
+
+lm_model <- lm(SalePrice ~., data=train)
+
+# save the model
+
+saveRDS(dummies,"./project/volume/models/SalePrice_lm.dummies")
+saveRDS(lm_model,"./project/volume/models/SalePrice_lm.model")
+
+test$pred<-predict(lm_model,newdata = test)
+
+
+
+# create submit.csv 
+
 fwrite(submit,"./project/volume/models/data/processed/submit.csv")
