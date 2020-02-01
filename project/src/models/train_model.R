@@ -13,27 +13,9 @@ DT2<-fread('./project/volume/models/data/raw/Stat_380_test.csv')
 test<-DT2
 
 
-# Wrangle train to be more similar to test
-
-train.m1 <- melt(train, id.vars=c("Id"), measure.vars=c("BldgType1Fam", "BldgType2fmCon", "BldgTypeDuplex", "BldgTypeTwnhs", "BldgTypeTwnhsE"))
-train.m1 <- subset(train.m1, value=="1")
-setorder(train.m1, Id, na.last=FALSE)
-
-
-
-# make a null model
-
-avg_price<-mean(train$SalePrice)
-
-test$Null_model<-avg_price
-
-
-# get root mean squared error
-rmse(train$SalePrice,test$Null_model)
-
 # create submission dataframe
-submit <- test[,.(Id, Null_model)]
-names(submit)[names(submit) == "Null_model"] = "SalePrice"
+#submit <- test[,.(Id, Null_model)]
+#names(submit)[names(submit) == "Null_model"] = "SalePrice"
 
 
 # Begin working on lm model
@@ -41,31 +23,42 @@ names(submit)[names(submit) == "Null_model"] = "SalePrice"
 set.seed(77)
 
 train_y <- train$SalePrice
+test$SalePrice <- 0
 
 
-dummies <- dummyVars(SalePrice ~ ., data=train)
-train <- predict(dummies, newdata = train)
+#dummies <- dummyVars(SalePrice ~ ., data=train)
+dummies <- dummyVars(SalePrice ~ LotFrontage + LotArea + BldgType + OverallQual + OverallCond + FullBath + HalfBath + TotRmsAbvGrd + YearBuilt + TotalBsmtSF + BedroomAbvGr + Heating + CentralAir + GrLivArea + PoolArea + YrSold, data=train)
+
+
+#train <- predict(dummies, newdata = train)
+#test <- predict(dummies, newdata = test)
 
 # reformat and add back response
 
-train <- data.table(train)
-train$SalePrice <- train_y
-test <- data.table(test)
+#train <- data.table(train)
+#train$SalePrice <- train_y
+#test <- data.table(test)
 
 
 # fit a linear model
 
-lm_model <- lm(SalePrice ~., data=train)
+lm_model <- lm(SalePrice ~ LotArea + OverallQual + OverallCond + FullBath + HalfBath + YearBuilt + TotalBsmtSF + BedroomAbvGr + CentralAir + GrLivArea + YrSold, data=train)
+
+# assess model
+
+summary(lm_model)
 
 # save the model
 
-saveRDS(dummies,"./project/volume/models/SalePrice_lm.dummies")
+#saveRDS(dummies,"./project/volume/models/SalePrice_lm.dummies")
 saveRDS(lm_model,"./project/volume/models/SalePrice_lm.model")
 
 test$pred<-predict(lm_model,newdata = test)
 
 
-
 # create submit.csv 
+
+submit <- test[,.(Id, pred)]
+names(submit)[names(submit) == "pred"] = "SalePrice"
 
 fwrite(submit,"./project/volume/models/data/processed/submit.csv")
